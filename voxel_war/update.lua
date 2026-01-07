@@ -11,15 +11,34 @@ function love.update(dt)
         mouse.on_gui = false
     end
 
+    --test for gui popup mode
+    if guiFactoryPopup.active
+    and mouse.gui_x >= view_w/2 - guiFactoryPopup.w/2 
+    and mouse.gui_x < view_w/2 + guiFactoryPopup.w/2 
+    and mouse.gui_y >= view_h/2 - guiFactoryPopup.h/2
+    and mouse.gui_y < view_h/2 + guiFactoryPopup.h/2 then
+
+        mouse.on_popup_gui = true
+    
+    else
+
+        mouse.on_popup_gui = false
+
+        --attempt to close popup gui if any clicks occur outside of window
+        if love.mouse.isDown('1') then
+            guiFactoryPopup.active = false
+        end
+    end
+
     --update gui buttons' hover status
     if mouse.on_gui then
 
         for i=1, #guiBuildingButton do
 
             if mouse.gui_x > guiBuildingButton[i].x
-            and mouse.gui_x < guiBuildingButton[i].x + 64
+            and mouse.gui_x < guiBuildingButton[i].x + 48
             and mouse.gui_y >= guiBuildingButton[i].y
-            and mouse.gui_y < guiBuildingButton[i].y + 64 then
+            and mouse.gui_y < guiBuildingButton[i].y + 48 then
 
                 guiBuildingButton[i].hover = true
                 guiBuildingButton[i].angle = guiBuildingButton[i].angle + 1
@@ -30,10 +49,26 @@ function love.update(dt)
             end
         end
     else
-
         for i=1, #guiBuildingButton do
             guiBuildingButton[i].hover = false
             guiBuildingButton[i].angle = 0
+        end
+    end
+
+    if guiFactoryPopup.active then
+        for i=1, #guiFactoryPopup.button do
+
+            if mouse.gui_x >= guiFactoryPopup.x + guiFactoryPopup.button[i].x
+            and mouse.gui_x < guiFactoryPopup.x + guiFactoryPopup.button[i].x + guiFactoryPopup.button.w
+            and mouse.gui_y >= guiFactoryPopup.y + guiFactoryPopup.button[i].y
+            and mouse.gui_y < guiFactoryPopup.y + guiFactoryPopup.button[i].y + guiFactoryPopup.button.h then
+                
+                guiFactoryPopup.button[i].hover = true
+                guiFactoryPopup.button[i].angle = guiFactoryPopup.button[i].angle + 1
+            else
+                guiFactoryPopup.button[i].hover = false
+                guiFactoryPopup.button[i].angle = 90
+            end
         end
     end
 
@@ -43,17 +78,17 @@ function love.update(dt)
         guiBuildingButton.cooldown = guiBuildingButton.cooldown - 1
     end
 
-    --increment money timer
+    --increment metal timer
     for i=1, #building do
         if building[i].type == "drill" then
 
-            building[i].money_timer = building[i].money_timer + 1
+            building[i].metal_timer = building[i].metal_timer + 1
 
-            if building[i].money_timer == 60 then
+            if building[i].metal_timer == 60 then
 
-                building[i].money_timer = 0
+                building[i].metal_timer = 0
 
-                money = money + 10
+                metal = metal + 1
             end
         end
     end
@@ -63,61 +98,13 @@ function love.update(dt)
         draw_grid = not draw_grid
     end
 
-    --CAMERA MOVEMENT
-    local _cam_moved_with_mouse = false
-
-    --move camera if mouse is on edges
-    if mouse.gui_x > (view_w - view_margin) then 
-        view_x = view_x + 8 
-        if view_x > 1920-(view_w/2) then 
-            view_x = 1920-(view_w/2) 
-        end
-        _cam_moved_with_mouse = true
-    end
-    if mouse.gui_x < view_margin then 
-        view_x = view_x - 8 
-        if view_x < (view_w/2) then 
-            view_x = (view_w/2) 
-        end
-        _cam_moved_with_mouse = true
-    end
-    if mouse.gui_y > (view_h - view_margin)
-    and not mouse.on_gui then
-        view_y = view_y + 8
-        if view_y > 1920-(view_h/2) then 
-            view_y = 1920-(view_h/2) 
-        end
-        _cam_moved_with_mouse = true
-    end
-    if mouse.gui_y < view_margin then
-        view_y = view_y - 8
-        if view_y < (view_h/2) then 
-            view_y = (view_h/2) 
-        end
-        _cam_moved_with_mouse = true
+    --[[CAMERA MOVEMENT]]
+    function love.wheelmoved(_, y)
+        if y == 0 then return end
+        zoomToCursor(cam, y * 0.1)
     end
 
-    --move camera with arrow keys
-    if not _cam_moved_with_mouse then
-        if love.keyboard.isDown('up') then
-            view_y = view_y - 8
-            if view_y < (480/2) then view_y = (480/2) end
-        end
-        if love.keyboard.isDown('down') then
-            view_y = view_y + 8
-            if view_y > (960 - (480/2)) then view_y = (960-(480/2)) end
-        end
-        if love.keyboard.isDown('left') then
-            view_x = view_x - 8
-            if view_x < (640/2) then view_x = (640/2) end
-        end
-        if love.keyboard.isDown('right') then
-            view_x = view_x + 8
-            if view_x > (1280 - (640/2)) then view_x = (1280 - (640/2)) end
-        end
-    end
-
-    cam:setPosition(view_x, view_y)
+    update_camera_movement()
 
     --update mouse coords
     mouse.x, mouse.y = cam:toWorld(mouse.gui_x, mouse.gui_y)
@@ -141,8 +128,17 @@ function love.update(dt)
         mouse.on_gui = false
     end
 
+    enemy_unit[1].angle = enemy_unit[1].angle + 1
+
     --MOUSE PRESSED DOWN
     if love.mouse.isDown(1) then
+
+        --attempt to deselect any selected buildings
+        if buildingSelected 
+        and not mouse.held 
+        and not mouse.on_popup_gui then
+            buildingSelected = nil
+        end
 
         --put into hold mode
         if mouse.held == false then
@@ -154,8 +150,8 @@ function love.update(dt)
         elseif mouse.drag == false 
         and mouse.mode == "interact" then
 
-            if mouse.og_x ~= mouse.x
-            or mouse.og_y ~= mouse.y then
+            if math.abs(mouse.og_x - mouse.x) >= 2
+            and math.abs(mouse.og_y - mouse.y) >= 2 then
 
                 mouse.drag = true
             end
@@ -203,99 +199,184 @@ function love.update(dt)
 
             if not mouse.on_gui then
 
-                if mouse.mode == "interact" then
+                if not mouse.on_popup_gui then
+                
+                    if mouse.mode == "interact" then
 
-                    --attempt to select building
-                    for i=1, #building do
-                        if mouse.x > ((building[i].x-32) + (16*(building[i].w % 2))) - building[i].w*16
-                        and mouse.x < ((building[i].x-32) + (16*(building[i].w % 2))) + building[i].w*16
-                        and mouse.y > ((building[i].y-32) + (16*(building[i].h % 2))) - building[i].h*16
-                        and mouse.y < ((building[i].y-32) + (16*(building[i].h % 2))) + building[i].h*16 then
+                        --attempt to select building
+                        for i=1, #building do
+                            if mouse.x > ((building[i].x-32) + (16*(building[i].w % 2))) - building[i].w*16
+                            and mouse.x < ((building[i].x-32) + (16*(building[i].w % 2))) + building[i].w*16
+                            and mouse.y > ((building[i].y-32) + (16*(building[i].h % 2))) - building[i].h*16
+                            and mouse.y < ((building[i].y-32) + (16*(building[i].h % 2))) + building[i].h*16 then
 
-                            buildingSelected = building[i]
-                            selected_units = {}
-                            break
+                                buildingSelected = building[i]
+                                selected_units = {}
+
+                                --setup popup
+                                if building[i].type == "vehicle_maker" then 
+                                    guiFactoryPopup.active = true
+                                    guiFactoryPopup.linkedBuilding = building[i]
+                                end
+                                break
+                            end
                         end
-                    end
 
-                    --attempt to select single unit
-                    local _selected_single_unit = false
+                        --attempt to select single unit
+                        local _selected_single_unit = false
 
-                    for i=1, #unit do
-                        if mouse.x > unit[i].x-16
-                        and mouse.x < unit[i].x+16
-                        and mouse.y > unit[i].y-16
-                        and mouse.y < unit[i].y+16 then
-                            
-                            selected_units = {unit[i]}
-                            unit[i].selected = true
-                            _selected_single_unit = true
+                        for i=1, #unit do
+                            if mouse.x > unit[i].x-16
+                            and mouse.x < unit[i].x+16
+                            and mouse.y > unit[i].y-16
+                            and mouse.y < unit[i].y+16 then
+                                
+                                selected_units = {unit[i]}
+                                unit[i].selected = true
+                                _selected_single_unit = true
 
-                            --deselect any building selected
-                            buildingSelected = nil
-                            break
+                                --deselect any building selected
+                                buildingSelected = nil
+                                break
+                            end
                         end
-                    end
 
-                    --attempt to move selected units
-                    if not _selected_single_unit then
-                        for i, _unit in ipairs(selected_units) do
+                        --attempt to move selected units
+                        if not _selected_single_unit then
+
+                            --first free up tiles each unit is standing on, to prevent them from blocking eachother's pathfinding
+                            for i=1, #selected_units do
+                                grid_map[selected_units[i].grid_y][selected_units[i].grid_x] = 0
+                            end
+
 
                             local target_x = mouse.grid_x - 1
                             local target_y = mouse.grid_y - 1
 
+                            local temp_blocks = {}
+
                             if target_x <= 0 then target_x = 1 end
                             if target_y <= 0 then target_y = 1 end
 
-                            if i == 2 then 
-                                target_x = target_x + 1
-                            end
-                            if i == 3 then 
-                                target_x = target_x - 1
-                            end
-                            if i == 4 then
-                                target_x = target_x + 1
-                                target_y = target_y + 1
+                            for i, _unit in ipairs(selected_units) do
+
+                                temp_target_x, temp_target_y = spiralSearch(target_x, target_y)
+
+                                print(temp_target_x .. "/" .. temp_target_y)
+
+                                --temporarily block this tile to prevent it from being used again
+                                grid_map[temp_target_y][temp_target_x] = 0.5
+
+                                table.insert(temp_blocks, {
+                                    x = temp_target_x,
+                                    y = temp_target_y
+                                })
+
+                                _unit.path = finder:getPath(_unit.grid_x, _unit.grid_y, temp_target_x, temp_target_y)
+                                _unit.currentStep = 1
+
                             end
 
-                            _unit.path = finder:getPath(_unit.grid_x, _unit.grid_y, target_x, target_y)
-                            _unit.currentStep = 1
+                            --unblock temporary blocks on tiles
+                            for i=1, #temp_blocks do
 
+                                grid_map[temp_blocks[i].y][temp_blocks[i].x] = 0
+                            end
+
+                        end
+
+                    --attempt to place building
+                    elseif mouse.mode == "place" then
+
+                        if mouse.valid_placement then
+
+                            local _building = table.shallowClone(mouse.to_place)
+                            _building.ghost = false
+
+                            table.insert(building, _building)
+
+                            --update grid map
+                            for i=1, _building.w do
+                                for ii=1, _building.h do
+                                    grid_map[_building.grid_y-2+ii][_building.grid_x-2+i] = 1
+                                end
+                            end
+
+                            --set cooldown
+                            guiBuildingButton.cooldown_max = buildingCooldown[_building.type]
+                            guiBuildingButton.cooldown = buildingCooldown[_building.type]
+
+                            --subtract metal
+                            metal = metal - buildingCost[_building.type]
+
+                            --increase unit limit if tent
+                            if _building.type == 'tent' then
+                                unit_limit = unit_limit + 6
+                            end
+
+                            --reset gui buttons
+                            guiBuildingButton.selected = nil
+
+                            mouse.mode = "interact"
                         end
                     end
+            
+                --MOUSE ON FACTORY POPUP GUI
+                else
 
-                --attempt to place building
-                elseif mouse.mode == "place" then
+                    for i=1, #guiFactoryPopup.button do
 
-                    if mouse.valid_placement then
+                        if guiFactoryPopup.button[i].hover then
 
-                        local _building = table.shallowClone(mouse.to_place)
-                        _building.ghost = false
+                            local _unit_cost_count = unitCost[guiFactoryPopup.button[i].type].count
 
-                        table.insert(building, _building)
+                            if unit_count + _unit_cost_count <= unit_limit then
 
-                        --update grid map
-                        for i=1, _building.w do
-                            for ii=1, _building.h do
-                                grid_map[_building.grid_y-2+ii][_building.grid_x-2+i] = 1
+                                local _grid_x, _grid_y = spiralSearch(guiFactoryPopup.linkedBuilding.grid_x,
+                                                                      guiFactoryPopup.linkedBuilding.grid_y + 2)
+
+                                local _x = _grid_x * 32 + 16
+                                local _y = _grid_y * 32 + 16
+
+                                table.insert(unit, {
+                                    type = guiFactoryPopup.button[i].type,
+                                    x = _x,
+                                    y = _y,
+                                    grid_x = _grid_x,
+                                    grid_y = _grid_y,
+                                    angle = 180,
+                                    goal_angle = 0,
+                                    gun_angle = 0,
+                                    gun_goal_angle = 0,
+                                    selected = false,
+                                    currentStep = 0,
+                                    speed = 2,
+                                    path = nil
+                                })
+
+                                grid_map[_grid_y][_grid_x] = 1
+
+                                unit_count = unit_count + unitCost[guiFactoryPopup.button[i].type].count
                             end
+                            break
                         end
-
-                        --set cooldown
-                        if _building.type == "drill" then
-
-                            guiBuildingButton.cooldown_max = 600
-                            guiBuildingButton.cooldown = 600
-                        end
-
-                        money = money - buildingCost[_building.type]
-
-                        mouse.mode = "interact"
                     end
                 end
-            
+
             --MOUSE ON GUI
             else
+
+                --check for click on minimap
+                if mouse.gui_x >= gui.x
+                and mouse.gui_x < gui.x + 120
+                and mouse.gui_y >= gui.y
+                and mouse.gui_y < gui.y + 120 then
+                    
+                    view_x = mouse.gui_x * 16
+                    view_y = (mouse.gui_y - gui.y) * 16
+
+                    cam:setPosition(view_x, view_y)
+                end
 
                 for i=1, #guiBuildingButton do
 
@@ -303,16 +384,23 @@ function love.update(dt)
 
                     if guiBuildingButton[i].hover == true 
                     and guiBuildingButton.cooldown == 0 
-                    and money >= buildingCost[_type] then
+                    and metal >= buildingCost[_type] then
 
+                        --deselect button and return mouse to interact mode OR select different button
                         if mouse.mode == "place" then
                             if mouse.to_place.type == _type then
+                                guiBuildingButton.selected = nil
                                 mouse.mode = "interact"
                                 break
+                            else
+                                guiBuildingButton.selected = i
                             end
+
+                        --select button and go into place mode
+                        elseif mouse.mode == "interact" then
+                            guiBuildingButton.selected = i
+                            mouse.mode = "place"
                         end
- 
-                        mouse.mode = "place"
 
                         mouse.to_place = {
                             type = _type,
@@ -324,7 +412,7 @@ function love.update(dt)
                             grid_x = mouse.grid_x - 1,
                             grid_y = mouse.grid_y - 1,
                             spr = buildingSprite[_type],
-                            money_timer = 0,
+                            metal_timer = 0,
                             selected = false
                         }
                         
@@ -343,7 +431,7 @@ function love.update(dt)
     --set mouse to_place building
     if love.keyboard.isDown('1') 
     and guiBuildingButton.cooldown == 0 
-    and money >= buildingCost['drill'] then
+    and metal >= buildingCost['drill'] then
         if not key_pressed['1'] then
 
             if mouse.mode ~= "place" then
@@ -358,7 +446,7 @@ function love.update(dt)
                     grid_x = mouse.grid_x - 1,
                     grid_y = mouse.grid_y - 1,
                     spr = spr.drill,
-                    money_timer = 0
+                    metal_timer = 0
                 }
                 --shitty bandaid fix for a bug
                 if mouse.to_place.grid_y < 2 then mouse.to_place.grid_y = 2 end
@@ -402,6 +490,9 @@ function love.update(dt)
                 --set tile we're moving away from to be free
                 grid_map[unit[i].grid_y][unit[i].grid_x] = 0
 
+                --set tile we're moving to to be 0.5 (for the minimap)
+                grid_map[_current_node.y][_current_node.x] = 0.5
+
                 local hori_dir = nil
                 local vert_dir = nil
 
@@ -439,7 +530,7 @@ function love.update(dt)
                     if hori_dir == "right" then unit[i].goal_angle = 90 end
                 end
 
-                --calculate which direction is the shortest path
+                --calculate which angle direction is the shortest path
                 local _diff = (unit[i].goal_angle - unit[i].angle + 360) % 360
                 if _diff > 0
                 and _diff <= 180 then
