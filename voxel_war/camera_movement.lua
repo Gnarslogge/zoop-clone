@@ -146,7 +146,7 @@ function update_camera_movement()
     -- Only consider intentional movement
     local move_x = (scroll_intent_x ~= 0 and xdiff ~= 0 and math.sign(xdiff) == scroll_intent_x) and scroll_intent_x or 0
     local move_y = (scroll_intent_y ~= 0 and ydiff ~= 0 and math.sign(ydiff) == scroll_intent_y) and scroll_intent_y or 0
-
+--[[
     if move_x ~= 0 and move_y ~= 0 then
         -- diagonal cursors
         if move_x > 0 and move_y < 0 then
@@ -164,7 +164,7 @@ function update_camera_movement()
     elseif move_y ~= 0 then
         -- vertical only
         temp_cursor = move_y > 0 and cursor.down or cursor.up
-    end
+    end]]
 
     --love.mouse.setCursor(temp_cursor)
 end
