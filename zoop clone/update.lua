@@ -139,7 +139,7 @@ function love.update(dt)
 			mouse.y = love.mouse.getY()
 
 			--swipe left
-			if mouse.og_x - mouse.x > 64 then
+			if mouse.og_x - mouse.x > 32 then
 
 				if (triangle.grid_x > 1) then
 					triangle.direction = 'left'
@@ -149,7 +149,7 @@ function love.update(dt)
 					swiped = true
 				end
 
-			elseif mouse.og_x - mouse.x < -64 then
+			elseif mouse.og_x - mouse.x < -32 then
 
 				if (triangle.grid_x < 4) then
 					triangle.direction = 'right'
@@ -159,7 +159,7 @@ function love.update(dt)
 					swiped = true
 				end
 
-			elseif mouse.og_y - mouse.y > 64 then
+			elseif mouse.og_y - mouse.y > 32 then
 
 				if (triangle.grid_y > 1) then
 					triangle.direction = 'up'
@@ -169,7 +169,7 @@ function love.update(dt)
 					swiped = true
 				end
 
-			elseif mouse.og_y - mouse.y < -64 then
+			elseif mouse.og_y - mouse.y < -32 then
 
 				if (triangle.grid_y < 4) then
 					triangle.direction = 'down'
