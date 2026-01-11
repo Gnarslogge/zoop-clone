@@ -47,7 +47,7 @@ function love.load()
 	}
 
 	--initialize randomization
-	math.randomseed(1)
+	math.randomseed()
 
 	triangle = {
 		x = 256 + 16,
@@ -117,6 +117,15 @@ function love.load()
 			spawn_timer = 0
 		}
 	}
+
+	mouse = {
+		x = 0,
+		y = 0,
+		og_x = 0,
+		og_y = 0,
+		held = false
+	}
+	swiped = false
 
 	key_pressed = {
 		['up'] = false,
