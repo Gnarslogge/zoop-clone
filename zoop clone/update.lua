@@ -151,10 +151,33 @@ function love.update(dt)
 
 			elseif mouse.og_x - mouse.x < -64 then
 
+				if (triangle.grid_x < 4) then
+					triangle.direction = 'right'
+					triangle.goal_angle = 90
+					triangle.between_squares = true
+					triangle.grid_x = triangle.grid_x + 1
+					swiped = true
+				end
+
 			elseif mouse.og_y - mouse.y > 64 then
+
+				if (triangle.grid_y > 1) then
+					triangle.direction = 'up'
+					triangle.goal_angle = 0
+					triangle.between_squares = true
+					triangle.grid_y = triangle.grid_y - 1
+					swiped = true
+				end
 
 			elseif mouse.og_y - mouse.y < -64 then
 
+				if (triangle.grid_y < 4) then
+					triangle.direction = 'down'
+					triangle.goal_angle = 180
+					triangle.between_squares = true
+					triangle.grid_y = triangle.grid_y + 1
+					swiped = true
+				end
 			end
 		end
 	end
