@@ -46,14 +46,8 @@ function love.load()
 		}
 	}
 
-mouse = {
-   x = 0
-   y = 0
-   held = false
-}
-
 	--initialize randomization
-	math.randomseed()
+	math.randomseed(1)
 
 	triangle = {
 		x = 256 + 16,
