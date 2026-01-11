@@ -47,7 +47,7 @@ function love.load()
 	}
 
 	--initialize randomization
-	math.randomseed()
+	math.randomseed(1)
 
 	triangle = {
 		x = 256 + 16,
