@@ -111,9 +111,57 @@ function love.update(dt)
 		key_held['right'] = true
 	end
 
+	local _mouse_input = false
+
+	--triangle mouse input
+	if not (triangle.between_squares) then
+
+		--cancel click
+		if not love.mouse.isDown('1') then
+			mouse.held = false
+			swiped = false
+		end
+
+		--initiate mouse click
+		if love.mouse.isDown('1') 
+		and not mouse.held then
+
+			mouse.og_x = love.mouse.getX()
+			mouse.og_y = love.mouse.getY()
+
+			mouse.held = true
+		end
+
+		if mouse.held 
+		and not swiped then
+
+			mouse.x = love.mouse.getX()
+			mouse.y = love.mouse.getY()
+
+			--swipe left
+			if mouse.og_x - mouse.x > 64 then
+
+				if (triangle.grid_x > 1) then
+					triangle.direction = 'left'
+					triangle.goal_angle = 270
+					triangle.between_squares = true
+					triangle.grid_x = triangle.grid_x - 1
+					swiped = true
+				end
+
+			elseif mouse.og_x - mouse.x < -64 then
+
+			elseif mouse.og_y - mouse.y > 64 then
+
+			elseif mouse.og_y - mouse.y < -64 then
+
+			end
+		end
+	end
 
 	--triangle key input
-	if not (triangle.between_squares) then
+	if not (triangle.between_squares) 
+	and not _mouse_input then
 
 		if key_pressed['up'] then
 
