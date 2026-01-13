@@ -49,7 +49,7 @@ function love.load()
 	}
 
 	--initialize randomization
-	math.randomseed()
+	math.randomseed(16)
 
 	triangle = {
 		spr = spr.triangle,
