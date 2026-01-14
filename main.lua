@@ -5,6 +5,6 @@ function load_scene(load_file, update_file, draw_file)
 	love.load()
 end
 
-load_scene('scene.menu.load',
-		   'scene.menu.update',
-		   'scene.menu.draw')
+load_scene('scene.endless.load',
+		   'scene.endless.update',
+		   'scene.endless.draw')

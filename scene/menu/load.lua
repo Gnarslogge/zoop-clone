@@ -51,5 +51,5 @@ function love.load()
 
 	button_selected = 1
 
-	love.window.setMode(640, 480)
+	--love.window.setMode(640, 480)
 end
