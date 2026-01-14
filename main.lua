@@ -1,8 +1,10 @@
 function load_scene(load_file, update_file, draw_file)
-	require (load_file)
+	require ('scene.menu.load')
+  love.load()
 	require (update_file)
 	require (draw_file)
-	love.load()
+  require (load_file)
+  love.load()
 end
 
 load_scene('scene.endless.load',
